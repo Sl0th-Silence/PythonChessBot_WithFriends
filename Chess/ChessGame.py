@@ -4,8 +4,7 @@ import chess
 import pygame as pg
 import pygame.display
 
-#initialize the gameplay window
-#Might need FPS but unsure for now
+#======= initialize the gameplay window and basic Vars ========#
 pg.init()
 WIDTH, HEIGHT = 800, 800
 screen = pg.display.set_mode((1200, HEIGHT))
@@ -13,20 +12,13 @@ pygame.display.set_caption("Chess Bot")
 FPS = 24
 font = pg.font.SysFont("arial", 20, True)
 information_surface = pg.Surface((400, 800))
+
+#Load images for promo and piece
 promotion_options =    {'r': pg.image.load("white-rook.png"),
                         'n': pg.image.load("white-knight.png"),
                         'b': pg.image.load("white-bishop.png"),
                         'q': pg.image.load("white-queen.png")
                         }
-#Scale promo options
-for each in promotion_options:
-    promotion_options[each] = pg.transform.scale(promotion_options[each], (80, 80))
-#To hold the .Rect of each promo
-promotion_rects = {}
-#Logic
-selected_square = None
-game_over = False
-
 #load pieces
 PIECE_IMAGES =       {'P': pg.image.load("white-pawn.png"),
                       'R': pg.image.load("white-rook.png"),
@@ -41,22 +33,33 @@ PIECE_IMAGES =       {'P': pg.image.load("white-pawn.png"),
                       'q': pg.image.load("black-queen.png"),
                       'k': pg.image.load("black-king.png"), }
 
-#Resizing
+#Resizing normal pieces
 new_size = (100, 100)
 for each in PIECE_IMAGES:
     PIECE_IMAGES[each] = pg.transform.scale(PIECE_IMAGES[each], new_size)
 
+#Resizing promo pieces
+for each in promotion_options:
+    promotion_options[each] = pg.transform.scale(promotion_options[each], (80, 80))
+#To hold the .Rect of each promo
+promotion_rects = {}
+
+#Logic
+selected_square = None
+game_over = False
+board = chess.Board() #This sets a board with the appropriate setup
+gameRunning = True
+
+#ENUM type for game mode with defaults
+GAME_PLAYING = 0
+GAME_PROMOTION = 1
+game_state = GAME_PLAYING
+pending_move = None
+
 #Colors for players and board
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-SQUARE_COLORS = ((234, 233, 210), (57, 57, 57))
-
-#Enumeration for state
-GAME_PLAYING = 0
-GAME_PROMOTION = 1
-
-game_state = GAME_PLAYING
-pending_move = None
+SQUARE_COLORS = ((234, 233, 210), (57, 57, 57)) #For the board squares
 
 #Make board
 def draw_board():
@@ -75,7 +78,7 @@ def draw_pieces(main_screen, board_state):
             rank_index = 7 - chess.square_rank(square) # Pygame y-axis is top down
             main_screen.blit(PIECE_IMAGES[piece.symbol()], (file_index * (WIDTH/8), rank_index * (HEIGHT/8)))
 
-
+#Get the piece when you click
 def mouse_to_square(position):
     #Add mouse click logic
     x, y = position
@@ -83,7 +86,7 @@ def mouse_to_square(position):
     rank = 7 - int(y // (HEIGHT / 8))
     return chess.square(file, rank)
 
-#Show the square selected
+#Highlight the square selected
 def draw_selected_square(square):
     if square is None:
         return
@@ -102,18 +105,18 @@ def draw_turn(turn):
     turn_surface = font.render("Turn: " + str(turn), True, WHITE)
     screen.blit(turn_surface, (textX, textY))
 
-#Right side
+#Right side information box
 def draw_information():
     black_box = pg.Rect(800, 0, 400, 800)
     screen.blit(information_surface, black_box)
 
 #Ask to promote
-#Maybe need to set the screen dark for a sec or something?
 def draw_promotion():
     # Draw the options
     promo_text = font.render("Choose a promotion:", True, WHITE)
     screen.blit(promo_text, (820, 50))
 
+    #img location and size
     x = 820
     y = 100
     size = 80
@@ -124,9 +127,6 @@ def draw_promotion():
         screen.blit(img, rect)
         y += size + 10
 
-
-board = chess.Board()
-gameRunning = True
 while gameRunning: #Game loop
     if game_state == GAME_PROMOTION:
         draw_promotion()
@@ -134,6 +134,7 @@ while gameRunning: #Game loop
         if event.type == pg.QUIT:
             gameRunning = False
 
+        #If you click and its time for a promotion
         if event.type == pg.MOUSEBUTTONDOWN and game_state == GAME_PROMOTION:
             #Promote
             draw_promotion()
@@ -150,16 +151,17 @@ while gameRunning: #Game loop
                     break
             continue
 
+        #If you click and its not game over and also not promotion
         elif event.type == pg.MOUSEBUTTONDOWN and not game_over:
             square = mouse_to_square(pygame.mouse.get_pos())
             if selected_square is None:
-                #First click
+                #First click, select piece
                 piece = board.piece_at(square)
                 if piece and piece.color == board.turn:
                     selected_square = square
 
             else:
-                #Second click
+                #Second click make the move
                 move = chess.Move(selected_square, square)
                 #is legal
                 if move in board.legal_moves:
@@ -192,7 +194,6 @@ while gameRunning: #Game loop
     draw_board()
     draw_pieces(screen, board)
     draw_selected_square(selected_square)
-    #Whos turn
     draw_information()
     if board.turn == chess.WHITE:
         current_turn = "White"
