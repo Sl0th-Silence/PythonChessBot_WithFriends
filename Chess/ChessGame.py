@@ -11,7 +11,9 @@ screen = pg.display.set_mode((1200, HEIGHT))
 pygame.display.set_caption("Chess Bot")
 FPS = 24
 font = pg.font.SysFont("arial", 20, True)
+large_font = pg.font.SysFont("arial", 35, True)
 information_surface = pg.Surface((400, 800))
+information_surface.fill((60, 60, 60)) # information background color. If not set, it's default is black
 
 #Load images for promo and piece
 promotion_options =    {'r': pg.image.load("white-rook.png"),
@@ -99,10 +101,10 @@ def draw_selected_square(square):
 
 #Show whos turn it is
 def draw_turn(turn):
-    textX = 810
+    textX = 915
     textY = 10
 
-    turn_surface = font.render("Turn: " + str(turn), True, WHITE)
+    turn_surface = large_font.render("Turn: " + str(turn), True, WHITE)
     screen.blit(turn_surface, (textX, textY))
 
 #Right side information box
@@ -113,8 +115,8 @@ def draw_information():
 #Ask to promote
 def draw_promotion():
     # Draw the options
-    promo_text = font.render("Choose a promotion:", True, WHITE)
-    screen.blit(promo_text, (820, 50))
+    promo_text = font.render("Choose a promotion", True, WHITE)
+    screen.blit(promo_text, (915, 50))
 
     #img location and size
     x = 820
@@ -125,7 +127,7 @@ def draw_promotion():
         rect = pg.Rect(x, y, size, size)
         promotion_rects[key] = rect
         screen.blit(img, rect)
-        y += size + 10
+        x += size + 10
 
 while gameRunning: #Game loop
     if game_state == GAME_PROMOTION:
