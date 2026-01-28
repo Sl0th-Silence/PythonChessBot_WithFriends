@@ -1,20 +1,21 @@
 import sys
-
 import chess
 import pygame as pg
 import pygame.display
 
 #======= initialize the gameplay window and basic Vars ========#
 pg.init()
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 700, 700
 screen = pg.display.set_mode((1200, HEIGHT))
 pygame.display.set_caption("Chess Bot")
 FPS = 24
 font = pg.font.SysFont("arial", 20, True)
 large_font = pg.font.SysFont("arial", 35, True)
 information_surface = pg.Surface((400, 800))
-information_surface.fill((60, 60, 60)) # information background color. If not set, it's default is black
+information_surface.fill((0, 0, 0)) # information background color. If not set, it's default is black
 
+red_surface = pg.Surface((200, 100))
+red_surface.fill((255, 0, 0))
 #Load images for promo and piece
 promotion_options =    {'r': pg.image.load("white-rook.png"),
                         'n': pg.image.load("white-knight.png"),
@@ -36,7 +37,7 @@ PIECE_IMAGES =       {'P': pg.image.load("white-pawn.png"),
                       'k': pg.image.load("black-king.png"), }
 
 #Resizing normal pieces
-new_size = (100, 100)
+new_size = (90, 90)
 for each in PIECE_IMAGES:
     PIECE_IMAGES[each] = pg.transform.scale(PIECE_IMAGES[each], new_size)
 
@@ -61,7 +62,7 @@ pending_move = None
 #Colors for players and board
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-SQUARE_COLORS = ((234, 233, 210), (57, 57, 57)) #For the board squares
+SQUARE_COLORS = ((255, 255, 255), (50, 50, 50)) #For the board squares
 
 #Make board
 def draw_board():
@@ -69,6 +70,7 @@ def draw_board():
         for col in range(8):
             color = SQUARE_COLORS[(row + col) % 2]
             pg.draw.rect(screen, color, pg.Rect(col * (WIDTH/8), row * (HEIGHT/8), WIDTH/8, HEIGHT/8))
+
 
 #Update the pieces and the board
 def draw_pieces(main_screen, board_state):
@@ -101,10 +103,9 @@ def draw_selected_square(square):
 
 #Show whos turn it is
 def draw_turn(turn):
-    textX = 915
-    textY = 10
-
     turn_surface = large_font.render("Turn: " + str(turn), True, WHITE)
+    textX = (950 - (turn_surface.get_width() / 2))
+    textY = 10
     screen.blit(turn_surface, (textX, textY))
 
 #Right side information box
@@ -112,24 +113,35 @@ def draw_information():
     black_box = pg.Rect(800, 0, 400, 800)
     screen.blit(information_surface, black_box)
 
+    #Draw quit button
+    size_x = 200
+    size_y = 50
+    pos_x = 900
+    pos_y = 500
+
+    quit_rect = pg.Rect(pos_x, pos_y, size_x, size_y)
+    screen.blit(red_surface, quit_rect)
+
 #Ask to promote
 def draw_promotion():
     # Draw the options
     promo_text = font.render("Choose a promotion", True, WHITE)
-    screen.blit(promo_text, (915, 50))
+    screen.blit(promo_text, (950 - (promo_text.get_width() / 2), 50))
 
     #img location and size
-    x = 820
+    x = 750
     y = 100
-    size = 80
+    size = 100
 
+    #Draw options
     for key, img in promotion_options.items():
         rect = pg.Rect(x, y, size, size)
         promotion_rects[key] = rect
         screen.blit(img, rect)
         x += size + 10
 
-while gameRunning: #Game loop
+#========================= GAME LOOP =========================#
+while gameRunning:
     if game_state == GAME_PROMOTION:
         draw_promotion()
     for event in pg.event.get():
@@ -155,13 +167,16 @@ while gameRunning: #Game loop
 
         #If you click and its not game over and also not promotion
         elif event.type == pg.MOUSEBUTTONDOWN and not game_over:
+            mouseX, mouseY = event.pos
+            #If you click other than the board
+            if mouseX > WIDTH or mouseY > HEIGHT:
+                continue
             square = mouse_to_square(pygame.mouse.get_pos())
             if selected_square is None:
                 #First click, select piece
                 piece = board.piece_at(square)
                 if piece and piece.color == board.turn:
                     selected_square = square
-
             else:
                 #Second click make the move
                 move = chess.Move(selected_square, square)
@@ -185,12 +200,14 @@ while gameRunning: #Game loop
                         else:
                             print("Illegal Move")
                     except:
-                        pass
+                        print("Except")
+                        break
 
                 #Clear selection
                 selected_square = None
 
-    pg.display.flip()
+# ========================= RENDERING =========================== #
+    pg.display.flip() #<-- Updates the display
     pg.time.Clock().tick(FPS)
     #Draw the board
     draw_board()
@@ -202,4 +219,3 @@ while gameRunning: #Game loop
     else:
         current_turn = "Black"
     draw_turn(current_turn)
-
