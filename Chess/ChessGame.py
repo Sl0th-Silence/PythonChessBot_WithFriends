@@ -2,6 +2,7 @@ import sys
 import chess
 import pygame as pg
 import pygame.display
+from pygame import MOUSEBUTTONDOWN
 
 #======= initialize the gameplay window and basic Vars ========#
 pg.init()
@@ -14,7 +15,14 @@ large_font = pg.font.SysFont("arial", 35, True)
 information_surface = pg.Surface((400, 800))
 information_surface.fill((0, 0, 0)) # information background color. If not set, it's default is black
 
-red_surface = pg.Surface((200, 100))
+#Quit button/rect
+size_x = 200
+size_y = 25
+pos_x = 850
+pos_y = 630
+quit_rect = pg.Rect(pos_x, pos_y, size_x, size_y)
+
+red_surface = pg.Surface((200, 50))
 red_surface.fill((255, 0, 0))
 #Load images for promo and piece
 promotion_options =    {'r': pg.image.load("white-rook.png"),
@@ -114,13 +122,9 @@ def draw_information():
     screen.blit(information_surface, black_box)
 
     #Draw quit button
-    size_x = 200
-    size_y = 50
-    pos_x = 900
-    pos_y = 500
 
-    quit_rect = pg.Rect(pos_x, pos_y, size_x, size_y)
     screen.blit(red_surface, quit_rect)
+    screen.blit(large_font.render("QUIT", True, WHITE), (pos_x + (size_x / 3), pos_y + (size_y / 4), size_x, size_y))
 
 #Ask to promote
 def draw_promotion():
@@ -170,8 +174,12 @@ while gameRunning:
             mouseX, mouseY = event.pos
             #If you click other than the board
             if mouseX > WIDTH or mouseY > HEIGHT:
-                continue
-            square = mouse_to_square(pygame.mouse.get_pos())
+                #We can check for quit button
+                if quit_rect.collidepoint(mouseX, mouseY):
+                    quit(1)
+                else:
+                    continue
+            square = mouse_to_square(pg.mouse.get_pos())
             if selected_square is None:
                 #First click, select piece
                 piece = board.piece_at(square)
