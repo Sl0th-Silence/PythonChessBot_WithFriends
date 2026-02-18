@@ -4,6 +4,7 @@ from pygame_gui import UIManager
 from pygame_gui.elements import UITextBox, UIScrollingContainer
 import ChessVisuals as cv
 # this will be for all of the game logic
+pg.init()
 
 class ChessEngine:
     def __init__(self):
@@ -13,7 +14,7 @@ class ChessEngine:
     large_font = pg.font.SysFont("arial", 35, True)
     FPS = 24
     moves_history = []
-
+    selected_square = None
     #Logic
 
     # ENUM type for game mode with defaults
@@ -76,7 +77,6 @@ class ChessEngine:
 
     # Ask to promote
     def draw_promotion(self):
-        print("promo!")
         # Draw the options
         promo_text = self.font.render("Choose a promotion", True, cv.WHITE)
         cv.screen.blit(promo_text, (950 - (promo_text.get_width() / 2), 50))

@@ -1,6 +1,9 @@
+import os
 import pygame as pg
 from pygame_gui import UIManager
 from pygame_gui.elements import UITextBox, UIScrollingContainer
+pg.init()
+
 #Surfaces also go in here
 #Colors for players and board
 WHITE = (255, 255, 255)
@@ -30,6 +33,7 @@ promotion_options =    {'r': pg.image.load("white-rook.png"),
                         'b': pg.image.load("white-bishop.png"),
                         'q': pg.image.load("white-queen.png")
                         }
+
 #load pieces
 PIECE_IMAGES =       {'P': pg.image.load("white-pawn.png"),
                       'R': pg.image.load("white-rook.png"),

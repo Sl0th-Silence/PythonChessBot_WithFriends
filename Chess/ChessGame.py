@@ -11,40 +11,35 @@ board = chess.Board()
 chess_game = cEngine.ChessEngine()
 chess_game.draw_board()
 chess_game.draw_pieces(cEngine.cv.screen, board)
-# TO HERE ====================================================
 
-#======= initialize the gameplay window and basic Vars ========#
+#======= initialize the window name and basic Logic ========#
 pg.display.set_caption("Chess Game")
 
 #Logic
-selected_square = None
 game_over = False
 gameRunning = True
-
 #========================= GAME LOOP =========================#
 while gameRunning:
-    if chess_game.game_state == chess_game.GAME_PROMOTION:
-        chess_game.draw_promotion()
     for event in pg.event.get():
         if event.type == pg.QUIT:
             gameRunning = False
-
         #If you click and it's time for a promotion
         if event.type == pg.MOUSEBUTTONDOWN and chess_game.game_state == chess_game.GAME_PROMOTION:
-            #Promote
-            chess_game.draw_promotion()
-            chess_game.add_move_to_log(move)
             mouseX, mouseY = event.pos
 
             for piece, rect in cEngine.cv.promotion_rects.items():
                 if rect.collidepoint(mouseX, mouseY):
-                    final_move = chess.Move.from_uci(str(chess_game.pending_move) + piece)
+                    final_move = chess.Move.from_uci(
+                        str(chess_game.pending_move) + piece
+                    )
                     board.push(final_move)
+                    chess_game.add_move_to_log(final_move)
 
-                    game_state = chess_game.GAME_PLAYING
-                    pending_move = None
-                    cEngine.cv.promotion_rects.clear()
+                    chess_game.game_state = chess_game.GAME_PLAYING
+                    chess_game.pending_move = None
+                    #cEngine.cv.promotion_rects.clear()
                     break
+
             continue
 
         #If you click and its not game over and also not promotion
@@ -58,14 +53,14 @@ while gameRunning:
                 else:
                     continue
             square = chess_game.mouse_to_square(pg.mouse.get_pos())
-            if selected_square is None:
+            if chess_game.selected_square is None:
                 #First click, select piece
                 piece = board.piece_at(square)
                 if piece and piece.color == board.turn:
-                    selected_square = square
+                    chess_game.selected_square = square
             else:
                 #Second click make the move
-                move = chess.Move(selected_square, square)
+                move = chess.Move(chess_game.selected_square, square)
                 #is legal
                 if move in board.legal_moves:
                     chess_game.add_move_to_log(move)
@@ -79,8 +74,8 @@ while gameRunning:
                         uci_move = chess.Move.from_uci(str(move))
                         for promo in ['q', 'r', 'b', 'n']:
                             if chess.Move.from_uci(str(uci_move) + promo) in board.legal_moves:
-                                game_state = chess_game.GAME_PROMOTION
-                                pending_move = uci_move
+                                chess_game.game_state = chess_game.GAME_PROMOTION
+                                chess_game.pending_move = uci_move
                                 break
                         else:
                             print("Illegal Move")
@@ -89,14 +84,16 @@ while gameRunning:
                         break
 
                 #Clear selection
-                selected_square = None
+                chess_game.selected_square = None
 
 # ========================= RENDERING =========================== #
     #Draw the board
     chess_game.draw_board()
-    chess_game.draw_pieces(cEngine.cv.screen, board)
-    chess_game.draw_selected_square(selected_square)
     chess_game.draw_information()
+    chess_game.draw_pieces(cEngine.cv.screen, board)
+    chess_game.draw_selected_square(chess_game.selected_square)
+    if chess_game.game_state == chess_game.GAME_PROMOTION:
+        chess_game.draw_promotion()
 
     if board.turn == chess.WHITE:
         current_turn = "White"
